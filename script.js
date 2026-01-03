@@ -109,13 +109,13 @@ const WEAPON_DATA = {
 
 /**
  * 結果を表示するDOM要素のID
- * 変更：ラジオボタンと実行ボタン用のIDを追加
+ * ※ここが古いとエラーになります
  */
 const DOM_ID = {
 	CATEGORY_DISPLAY: 'result-category',
 	WEAPON_DISPLAY: 'result-weapon',
-	RADIO_CONTAINER: 'radio-container', // 新規
-	ROLL_BUTTON: 'roll-button'          // 新規
+	RADIO_CONTAINER: 'radio-container', // これが必要です
+	ROLL_BUTTON: 'roll-button'
 };
 
 /**
@@ -147,8 +147,8 @@ function displayResult(category, weapon) {
 	const categoryEl = document.getElementById(DOM_ID.CATEGORY_DISPLAY);
 	const weaponEl = document.getElementById(DOM_ID.WEAPON_DISPLAY);
 
-	categoryEl.textContent = category;
-	weaponEl.textContent = weapon;
+	if (categoryEl) categoryEl.textContent = category;
+	if (weaponEl) weaponEl.textContent = weapon;
 }
 
 /**
@@ -176,7 +176,7 @@ function pickWeaponFromAll() {
 }
 
 // ==========================================
-// 新規追加・変更した関数群
+// UI初期化・イベントハンドラ
 // ==========================================
 
 /**
@@ -185,6 +185,12 @@ function pickWeaponFromAll() {
  */
 function initRadioUI() {
 	const container = document.getElementById(DOM_ID.RADIO_CONTAINER);
+
+	// HTML側に id="radio-container" が存在しないとエラーになるためチェック
+	if (!container) {
+		console.error("エラー: HTML内に id='" + DOM_ID.RADIO_CONTAINER + "' が見つかりません。");
+		return;
+	}
 
 	// 選択肢のリストを作成（先頭に「すべて」を追加）
 	const categories = [ALL_KEY, ...Object.keys(WEAPON_DATA)];
@@ -249,11 +255,15 @@ function onRollButtonClick() {
  * ラジオボタンの生成と、実行ボタンへのイベント登録を行います。
  */
 function init() {
+	// 1. ラジオボタンUIの作成
 	initRadioUI();
 
+	// 2. 実行ボタンのイベント登録
 	const rollBtn = document.getElementById(DOM_ID.ROLL_BUTTON);
 	if (rollBtn) {
 		rollBtn.addEventListener('click', onRollButtonClick);
+	} else {
+		console.error("エラー: HTML内に id='" + DOM_ID.ROLL_BUTTON + "' が見つかりません。");
 	}
 }
 
