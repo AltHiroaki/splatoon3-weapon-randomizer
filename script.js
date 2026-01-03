@@ -109,12 +109,11 @@ const WEAPON_DATA = {
 
 /**
  * 結果を表示するDOM要素のID
- * ※ここが古いとエラーになります
  */
 const DOM_ID = {
 	CATEGORY_DISPLAY: 'result-category',
 	WEAPON_DISPLAY: 'result-weapon',
-	RADIO_CONTAINER: 'radio-container', // これが必要です
+	RADIO_CONTAINER: 'radio-container',
 	ROLL_BUTTON: 'roll-button'
 };
 
@@ -140,15 +139,46 @@ function getRandomItem(array) {
 
 /**
  * 画面に選出されたブキとカテゴリを表示する関数
+ * 画像の表示処理（PNGとWebPの混在対応版）
  * @param {string} category - ブキのカテゴリ名
  * @param {string} weapon - ブキ名
  */
 function displayResult(category, weapon) {
 	const categoryEl = document.getElementById(DOM_ID.CATEGORY_DISPLAY);
 	const weaponEl = document.getElementById(DOM_ID.WEAPON_DISPLAY);
+	const imageEl = document.getElementById('weapon-image');
 
+	// テキストの更新
 	if (categoryEl) categoryEl.textContent = category;
 	if (weaponEl) weaponEl.textContent = weapon;
+
+	// 画像の更新処理
+	if (imageEl) {
+		// 1. まず表示状態にする
+		imageEl.style.display = 'inline-block';
+
+		let filename = weapon;
+        if (filename.startsWith('.')) {
+            filename = filename.substring(1); // 先頭の1文字（ドット）を削除
+        }
+		
+		// 2. 「読み込みに失敗したときの処理」を定義する
+		imageEl.onerror = function () {
+			// 今読み込もうとしたファイルが PNG だった場合
+			if (this.src.endsWith('.png')) {
+				// 「じゃあ WebP を試してみよう」と切り替える
+				this.src = 'images/' + weapon + '.webp';
+			}
+			// WebP もダメだった場合（完全に画像がない場合）
+			else {
+				this.style.display = 'none'; // 画像を隠す
+				console.log('画像が見つかりませんでした: ' + weapon);
+			}
+		};
+
+		// 3. まずは PNG を読み込んでみる（ダメなら上のonerrorが発動する）
+		imageEl.src = 'images/' + weapon + '.png';
+	}
 }
 
 /**
@@ -186,7 +216,7 @@ function pickWeaponFromAll() {
 function initRadioUI() {
 	const container = document.getElementById(DOM_ID.RADIO_CONTAINER);
 
-	// HTML側に id="radio-container" が存在しないとエラーになるためチェック
+	// エラーチェック
 	if (!container) {
 		console.error("エラー: HTML内に id='" + DOM_ID.RADIO_CONTAINER + "' が見つかりません。");
 		return;
