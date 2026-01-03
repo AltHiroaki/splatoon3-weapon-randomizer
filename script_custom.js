@@ -411,166 +411,121 @@ function updateAllButtonVisuals() {
 		}
 	});
 }
-/* ==========================================================================
-   修正箇所: 下記の2つの関数を上書きしてください
-   ========================================================================== */
+
 
 /**
- * サブウェポン選択時のイベントハンドラ。
- * 1. 既に選択中の場合は、そのサブを持つブキだけを除外（選択解除）します。
- * 2. 未選択の場合は、そのサブを持つブキを新規選択（フィルタ切り替え）します。
+ * サブウェポン選択時のイベントハンドラ（直感的なトグル操作版）。
+ * ・現在そのサブが「アクティブ（色付き）」なら → 選択中のブキからそのサブを持つものを【除外】。
+ * ・現在そのサブが「非アクティブ（灰色）」なら → そのサブを持つブキを全て【追加】。
  * @param {string} selectedSub - 選択されたサブウェポン名
  */
 function onSubSelect(selectedSub) {
-    let isAlreadyActive = false;
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        if (btn.dataset.sub === selectedSub && btn.classList.contains('active')) {
-            isAlreadyActive = true;
-        }
-    });
+	// 1. 「現在、このサブボタンはアクティブ（色付き）か？」を判定
+	// 選択済みのブキの中に、このサブを持つものが1つでもあればアクティブとみなす
+	let isCurrentlyActive = false;
+	for (const weaponName of selectedWeapons) {
+		const spec = WEAPON_SPECS.find(w => w.name === weaponName);
+		if (spec && spec.sub === selectedSub) {
+			isCurrentlyActive = true;
+			break;
+		}
+	}
 
-    if (isAlreadyActive) {
-        // 1. このサブボタンの選択表示を消す
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            if (btn.dataset.sub === selectedSub) btn.classList.remove('active');
-        });
+	if (isCurrentlyActive) {
+		// 削除モード
+		// 「選択済みのブキ」の中から、「このサブを持つもの」だけを消す
+		// （他のスペシャルで選ばれた、別のサブを持つブキは残す）
+		const toRemove = [];
+		selectedWeapons.forEach(name => {
+			const spec = WEAPON_SPECS.find(w => w.name === name);
+			if (spec && spec.sub === selectedSub) {
+				toRemove.push(name);
+			}
+		});
+		toRemove.forEach(name => selectedWeapons.delete(name));
+	} else {
+		// 追加モード
+		// WEAPON_SPECS全体から、「このサブを持つもの」を全て追加する
+		WEAPON_SPECS.filter(w => w.sub === selectedSub).forEach(w => {
+			selectedWeapons.add(w.name);
+		});
+	}
 
-        // 2. このサブを持つブキを選択リストから削除する
-        WEAPON_SPECS.filter(w => w.sub === selectedSub).forEach(w => {
-            selectedWeapons.delete(w.name);
-        });
-
-        // 3. 残ったブキに基づいて、スペシャルの表示を更新する
-        const remainingSpecials = new Set();
-        WEAPON_SPECS.forEach(w => {
-            if (selectedWeapons.has(w.name)) {
-                remainingSpecials.add(w.special);
-            }
-        });
-
-        document.querySelectorAll('.special-tag').forEach(tag => {
-            if (remainingSpecials.has(tag.dataset.special)) {
-                tag.classList.add('active');
-            } else {
-                tag.classList.remove('active');
-            }
-        });
-
-        // 4. アコーディオンの表示更新
-        updateAllButtonVisuals();
-        return;
-    }
-
-    // 以下、新規選択時の処理
-    
-    // 1. サブボタンのUI更新
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        if (btn.dataset.sub === selectedSub) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-
-    // 2. スペシャルボタンのUI初期化
-    document.querySelectorAll('.special-tag').forEach(tag => tag.classList.remove('active'));
-
-    // 3. 既存のブキ選択をクリア
-    selectedWeapons.clear();
-
-    // 4. 該当サブを持つブキを抽出して選択状態にする
-    const matchedWeapons = WEAPON_SPECS.filter(w => w.sub === selectedSub);
-    matchedWeapons.forEach(w => selectedWeapons.add(w.name));
-
-    // 5. 抽出されたブキが持つスペシャルをハイライト
-    const activeSpecials = new Set(matchedWeapons.map(w => w.special));
-    document.querySelectorAll('.special-tag').forEach(tag => {
-        if (activeSpecials.has(tag.dataset.special)) {
-            tag.classList.add('active');
-        }
-    });
-
-    // 6. アコーディオンの見た目を同期
-    updateAllButtonVisuals();
+	// 画面の更新
+	updateFilterVisuals();
+	updateAllButtonVisuals();
 }
 
 /**
- * スペシャルウェポン選択時のイベントハンドラ。
- * 1. 既に選択中の場合は、そのスペシャルを持つブキだけを除外（選択解除）します。
- * 2. 未選択の場合は、そのスペシャルを持つブキを新規選択（フィルタ切り替え）します。
+ * スペシャルウェポン選択時のイベントハンドラ（直感的なトグル操作版）。
+ * ・現在そのスペシャルが「アクティブ（色付き）」なら → 選択中のブキからそのスペシャルを持つものを【除外】。
+ * ・現在そのスペシャルが「非アクティブ（灰色）」なら → そのスペシャルを持つブキを全て【追加】。
  * @param {string} selectedSpecial - 選択されたスペシャルウェポン名
  */
 function onSpecialSelect(selectedSpecial) {
-    let isAlreadyActive = false;
-    document.querySelectorAll('.special-tag').forEach(tag => {
-        if (tag.dataset.special === selectedSpecial && tag.classList.contains('active')) {
-            isAlreadyActive = true;
-        }
-    });
+	// 1. 「現在、このスペシャルボタンはアクティブ（色付き）か？」を判定
+	let isCurrentlyActive = false;
+	for (const weaponName of selectedWeapons) {
+		const spec = WEAPON_SPECS.find(w => w.name === weaponName);
+		if (spec && spec.special === selectedSpecial) {
+			isCurrentlyActive = true;
+			break;
+		}
+	}
 
-    if (isAlreadyActive) {
-        // 1. このスペシャルボタンの選択表示を消す
-        document.querySelectorAll('.special-tag').forEach(tag => {
-            if (tag.dataset.special === selectedSpecial) tag.classList.remove('active');
-        });
+	if (isCurrentlyActive) {
+		// 削除モード
+		// 「選択済みのブキ」の中から、「このスペシャルを持つもの」だけを消す
+		const toRemove = [];
+		selectedWeapons.forEach(name => {
+			const spec = WEAPON_SPECS.find(w => w.name === name);
+			if (spec && spec.special === selectedSpecial) {
+				toRemove.push(name);
+			}
+		});
+		toRemove.forEach(name => selectedWeapons.delete(name));
+	} else {
+		// 追加モード
+		// WEAPON_SPECS全体から、「このスペシャルを持つもの」を全て追加する
+		WEAPON_SPECS.filter(w => w.special === selectedSpecial).forEach(w => {
+			selectedWeapons.add(w.name);
+		});
+	}
 
-        // 2. このスペシャルを持つブキを選択リストから削除する
-        WEAPON_SPECS.filter(w => w.special === selectedSpecial).forEach(w => {
-            selectedWeapons.delete(w.name);
-        });
+	// 画面の更新
+	updateFilterVisuals();
+	updateAllButtonVisuals();
+}
 
-        // 3. 残ったブキに基づいて、サブの表示を更新する
-        const remainingSubs = new Set();
-        WEAPON_SPECS.forEach(w => {
-            if (selectedWeapons.has(w.name)) {
-                remainingSubs.add(w.sub);
-            }
-        });
+/**
+ * フィルタボタン（サブ・スペシャル）の見た目を現在の選択状態に合わせて更新する関数
+ */
+function updateFilterVisuals() {
+	const activeSubs = new Set();
+	const activeSpecials = new Set();
 
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            if (remainingSubs.has(btn.dataset.sub)) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
+	WEAPON_SPECS.forEach(w => {
+		if (selectedWeapons.has(w.name)) {
+			activeSubs.add(w.sub);
+			activeSpecials.add(w.special);
+		}
+	});
 
-        // 4. アコーディオンの表示更新
-        updateAllButtonVisuals();
-        return;
-    }
+	document.querySelectorAll('.filter-btn').forEach(btn => {
+		if (activeSubs.has(btn.dataset.sub)) {
+			btn.classList.add('active');
+		} else {
+			btn.classList.remove('active');
+		}
+	});
 
-    // 以下、新規選択時の処理
-
-    // 1. スペシャルボタンのUI更新
-    document.querySelectorAll('.special-tag').forEach(tag => {
-        if (tag.dataset.special === selectedSpecial) {
-            tag.classList.add('active');
-        } else {
-            tag.classList.remove('active');
-        }
-    });
-
-    // 2. サブボタンのUI初期化
-    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-
-    // 3. 既存のブキ選択をクリア
-    selectedWeapons.clear();
-
-    // 4. 該当スペシャルを持つブキを抽出
-    const matchedWeapons = WEAPON_SPECS.filter(w => w.special === selectedSpecial);
-    matchedWeapons.forEach(w => selectedWeapons.add(w.name));
-
-    // 5. 抽出されたブキが持つサブをハイライト
-    const activeSubs = new Set(matchedWeapons.map(w => w.sub));
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        if (activeSubs.has(btn.dataset.sub)) {
-            btn.classList.add('active');
-        }
-    });
-
-    // 6. アコーディオンの見た目を同期
-    updateAllButtonVisuals();
+	document.querySelectorAll('.special-tag').forEach(tag => {
+		if (activeSpecials.has(tag.dataset.special)) {
+			tag.classList.add('active');
+		} else {
+			tag.classList.remove('active');
+		}
+	});
 }
 
 /**
