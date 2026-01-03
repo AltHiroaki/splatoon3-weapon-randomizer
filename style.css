@@ -1,0 +1,97 @@
+:root {
+    --primary-color: #603aff; /* スプラ3っぽい紫 */
+    --accent-color: #eaff3d; /* スプラ3っぽい黄色 */
+    --bg-color: #f0f0f0;
+    --text-color: #333;
+}
+
+body {
+    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+h1 {
+    color: var(--primary-color);
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/* 結果表示エリア */
+#result-area {
+    background-color: #fff;
+    width: 90%;
+    max-width: 600px;
+    padding: 40px 20px;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    text-align: center;
+    margin-bottom: 30px;
+    border: 5px solid var(--primary-color);
+}
+
+#result-category {
+    font-size: 1.2rem;
+    color: #888;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+#result-weapon {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #000;
+    min-height: 2.4rem; /* ガタつき防止 */
+}
+
+/* ボタンエリア */
+#buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    max-width: 800px;
+}
+
+button {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    font-size: 1rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: transform 0.1s, background-color 0.2s;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+/* 全ランダムボタンは目立たせる */
+button.all-random {
+    background-color: var(--accent-color);
+    color: #000;
+    width: 100%;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+footer {
+    margin-top: auto;
+    padding-top: 20px;
+    font-size: 0.8rem;
+    color: #888;
+}
