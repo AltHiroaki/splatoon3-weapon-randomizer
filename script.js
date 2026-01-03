@@ -161,23 +161,23 @@ function displayResult(category, weapon) {
         if (filename.startsWith('.')) {
             filename = filename.substring(1); // 先頭の1文字（ドット）を削除
         }
-		
+
 		// 2. 「読み込みに失敗したときの処理」を定義する
 		imageEl.onerror = function () {
 			// 今読み込もうとしたファイルが PNG だった場合
 			if (this.src.endsWith('.png')) {
 				// 「じゃあ WebP を試してみよう」と切り替える
-				this.src = 'images/' + weapon + '.webp';
+				imageEl.src = 'images/' + filename + '.webp';
 			}
 			// WebP もダメだった場合（完全に画像がない場合）
 			else {
 				this.style.display = 'none'; // 画像を隠す
-				console.log('画像が見つかりませんでした: ' + weapon);
+				console.log('画像が見つかりませんでした: ' + filename);
 			}
 		};
 
 		// 3. まずは PNG を読み込んでみる（ダメなら上のonerrorが発動する）
-		imageEl.src = 'images/' + weapon + '.png';
+		imageEl.src = 'images/' + filename + '.png';
 	}
 }
 
