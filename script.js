@@ -4,7 +4,6 @@
 
 /**
  * ブキカテゴリーとブキ一覧のデータオブジェクト
- * @type {Object.<string, string[]>}
  */
 const WEAPON_DATA = {
 	'シューター': [
@@ -107,30 +106,25 @@ const WEAPON_DATA = {
 	]
 };
 
-/**
- * 結果を表示するDOM要素のID
- */
 const DOM_ID = {
 	CATEGORY_DISPLAY: 'result-category',
 	WEAPON_DISPLAY: 'result-weapon',
-	RADIO_CONTAINER: 'radio-container',
+	ACCORDION_CONTAINER: 'accordion-container',
 	ROLL_BUTTON: 'roll-button'
 };
 
 /**
- * 「すべて」を選択したときの特別なキー
- * @type {string}
+ * 選択中のブキを管理するSet（重複なしリスト）
+ * @type {Set<string>}
  */
-const ALL_KEY = 'ALL';
+const selectedWeapons = new Set();
 
 // ==========================================
-// 関数定義
+// 関数定義：基本ロジック
 // ==========================================
 
 /**
  * 指定された配列からランダムな要素を1つ返す関数
- * @param {string[]} array - 選択元の配列
- * @returns {string} ランダムに選ばれた要素
  */
 function getRandomItem(array) {
 	const index = Math.floor(Math.random() * array.length);
@@ -138,168 +132,180 @@ function getRandomItem(array) {
 }
 
 /**
- * 画面に選出されたブキとカテゴリを表示する関数
- * 画像の表示処理（PNGとWebPの混在対応版）
- * @param {string} category - ブキのカテゴリ名
- * @param {string} weapon - ブキ名
+ * 結果を表示する関数（画像対応）
  */
 function displayResult(category, weapon) {
 	const categoryEl = document.getElementById(DOM_ID.CATEGORY_DISPLAY);
 	const weaponEl = document.getElementById(DOM_ID.WEAPON_DISPLAY);
 	const imageEl = document.getElementById('weapon-image');
 
-	// テキストの更新
 	if (categoryEl) categoryEl.textContent = category;
 	if (weaponEl) weaponEl.textContent = weapon;
 
-	// 画像の更新処理
 	if (imageEl) {
-		// 1. まず表示状態にする
 		imageEl.style.display = 'inline-block';
 
 		let filename = weapon;
-        if (filename.startsWith('.')) {
-            filename = filename.substring(1); // 先頭の1文字（ドット）を削除
-        }
+		if (filename.startsWith('.')) {
+			filename = filename.substring(1);
+		}
 
-		// 2. 「読み込みに失敗したときの処理」を定義する
 		imageEl.onerror = function () {
-			// 今読み込もうとしたファイルが PNG だった場合
 			if (this.src.endsWith('.png')) {
-				// 「じゃあ WebP を試してみよう」と切り替える
-				imageEl.src = 'images/' + filename + '.webp';
-			}
-			// WebP もダメだった場合（完全に画像がない場合）
-			else {
-				this.style.display = 'none'; // 画像を隠す
-				console.log('画像が見つかりませんでした: ' + filename);
+				this.src = 'images/' + filename + '.webp';
+			} else {
+				this.style.display = 'none';
+				console.log('画像が見つかりませんでした: ' + weapon);
 			}
 		};
 
-		// 3. まずは PNG を読み込んでみる（ダメなら上のonerrorが発動する）
 		imageEl.src = 'images/' + filename + '.png';
 	}
 }
 
-/**
- * 指定されたカテゴリのブキをランダムに選出し、表示を更新する関数
- * @param {string} categoryKey - WEAPON_DATAのキー（カテゴリ名）
- */
-function pickWeaponByCategory(categoryKey) {
-	const weaponList = WEAPON_DATA[categoryKey];
-	if (!weaponList) return;
-
-	const selectedWeapon = getRandomItem(weaponList);
-	displayResult(categoryKey, selectedWeapon);
-}
-
-/**
- * 全ブキの中からランダムに1つ選出して表示する関数
- */
-function pickWeaponFromAll() {
-	// 全カテゴリのキーを取得
-	const categories = Object.keys(WEAPON_DATA);
-	// ランダムにカテゴリを決定
-	const randomCategory = getRandomItem(categories);
-	// そのカテゴリからランダムにブキを決定
-	pickWeaponByCategory(randomCategory);
-}
-
 // ==========================================
-// UI初期化・イベントハンドラ
+// 関数定義：アコーディオンUIと選択ロジック
 // ==========================================
 
 /**
- * ラジオボタンのHTMLを生成して画面に配置する関数
- * 「すべて」の選択肢と、WEAPON_DATAのキーに基づく選択肢を作成します。
+ * ブキボタンの見た目を選択状態/未選択状態に更新する
+ * @param {HTMLElement} btn - 更新対象のボタン
+ * @param {string} weaponName - ブキ名
  */
-function initRadioUI() {
-	const container = document.getElementById(DOM_ID.RADIO_CONTAINER);
+function updateButtonVisual(btn, weaponName) {
+	if (selectedWeapons.has(weaponName)) {
+		btn.classList.add('selected');
+	} else {
+		btn.classList.remove('selected');
+	}
+}
 
-	// エラーチェック
-	if (!container) {
-		console.error("エラー: HTML内に id='" + DOM_ID.RADIO_CONTAINER + "' が見つかりません。");
-		return;
+/**
+ * カテゴリ一括選択ボタンが押されたときの処理
+ * @param {string} category - カテゴリ名
+ * @param {Event} e - クリックイベント
+ */
+function toggleCategoryAll(category, e) {
+	e.stopPropagation(); // アコーディオンの開閉を防止
+
+	const weaponList = WEAPON_DATA[category];
+	// そのカテゴリのブキが「全て選択されているか」を確認
+	const allSelected = weaponList.every(w => selectedWeapons.has(w));
+
+	if (allSelected) {
+		// 全て選択済みなら → 全解除
+		weaponList.forEach(w => selectedWeapons.delete(w));
+	} else {
+		// 一部または未選択なら → 全選択
+		weaponList.forEach(w => selectedWeapons.add(w));
 	}
 
-	// 選択肢のリストを作成（先頭に「すべて」を追加）
-	const categories = [ALL_KEY, ...Object.keys(WEAPON_DATA)];
-
-	categories.forEach((category, index) => {
-		// ラジオボタンのID（labelとの紐付け用）
-		const radioId = `radio-${index}`;
-		// 表示名（ALLの場合は日本語にする）
-		const labelText = category === ALL_KEY ? 'すべての種から' : category;
-
-		// input要素（ラジオボタン）の作成
-		const input = document.createElement('input');
-		input.type = 'radio';
-		input.name = 'weapon-category'; // 同じname属性でグループ化
-		input.value = category;
-		input.id = radioId;
-		input.className = 'radio-input';
-
-		// デフォルトで「すべて」を選択状態にする
-		if (category === ALL_KEY) {
-			input.checked = true;
-		}
-
-		// label要素の作成（ボタンのような見た目にする対象）
-		const label = document.createElement('label');
-		label.htmlFor = radioId;
-		label.className = 'radio-label';
-		label.textContent = labelText;
-
-		// コンテナに追加
-		container.appendChild(input);
-		container.appendChild(label);
+	// 画面上の全ボタンの見た目を更新
+	// (効率は落ちますが、コードを簡単にするため全ボタンを再描画します)
+	document.querySelectorAll('.weapon-toggle').forEach(btn => {
+		updateButtonVisual(btn, btn.textContent);
 	});
 }
 
 /**
- * 「ブキを選出する！」ボタンが押されたときの処理関数
- * 選択されているラジオボタンの値を確認し、適切な選出関数を呼び出します。
+ * アコーディオンUIを作成する関数
  */
-function onRollButtonClick() {
-	// チェックされているラジオボタンを取得
-	const checkedRadio = document.querySelector('input[name="weapon-category"]:checked');
+function initAccordionUI() {
+	const container = document.getElementById(DOM_ID.ACCORDION_CONTAINER);
+	if (!container) return;
 
-	if (!checkedRadio) {
-		alert('カテゴリが選択されていません');
-		return;
-	}
+	for (const category in WEAPON_DATA) {
+		// 1. カテゴリの箱
+		const item = document.createElement('div');
+		item.className = 'accordion-item';
 
-	const selectedValue = checkedRadio.value;
+		// 2. ヘッダー（タイトル ＋ 一括ボタン）
+		const header = document.createElement('div');
+		header.className = 'accordion-header';
+		header.innerHTML = `<span>${category}</span>`;
+		
+		// 一括選択ボタン
+		const selectAllBtn = document.createElement('button');
+		selectAllBtn.className = 'category-select-btn';
+		selectAllBtn.textContent = '全選択/解除';
+		selectAllBtn.addEventListener('click', (e) => toggleCategoryAll(category, e));
+		
+		header.appendChild(selectAllBtn);
 
-	if (selectedValue === ALL_KEY) {
-		// 「すべて」が選ばれている場合
-		pickWeaponFromAll();
-	} else {
-		// 特定のカテゴリが選ばれている場合
-		pickWeaponByCategory(selectedValue);
+		// ヘッダーをクリックしたら中身を開閉
+		header.addEventListener('click', () => {
+			content.classList.toggle('open');
+		});
+
+		// 3. 中身（ブキ一覧エリア）
+		const content = document.createElement('div');
+		content.className = 'accordion-content';
+
+		// ブキごとのボタンを作成
+		WEAPON_DATA[category].forEach(weapon => {
+			const weaponBtn = document.createElement('button');
+			weaponBtn.className = 'weapon-toggle';
+			weaponBtn.textContent = weapon;
+
+			// 初期状態は未選択（必要ならここでaddする）
+			// weaponBtn.classList.add('selected'); // 最初から全選択したい場合はコメントアウトを外す
+
+			// クリックで選択/解除
+			weaponBtn.addEventListener('click', () => {
+				if (selectedWeapons.has(weapon)) {
+					selectedWeapons.delete(weapon);
+				} else {
+					selectedWeapons.add(weapon);
+				}
+				updateButtonVisual(weaponBtn, weapon);
+			});
+
+			content.appendChild(weaponBtn);
+		});
+
+		item.appendChild(header);
+		item.appendChild(content);
+		container.appendChild(item);
 	}
 }
 
 /**
- * 初期化関数
- * ラジオボタンの生成と、実行ボタンへのイベント登録を行います。
+ * 「選出する」ボタンの処理
  */
-function init() {
-	// 1. ラジオボタンUIの作成
-	initRadioUI();
-
-	// 2. 実行ボタンのイベント登録
-	const rollBtn = document.getElementById(DOM_ID.ROLL_BUTTON);
-	if (rollBtn) {
-		rollBtn.addEventListener('click', onRollButtonClick);
-	} else {
-		console.error("エラー: HTML内に id='" + DOM_ID.ROLL_BUTTON + "' が見つかりません。");
+function onRollButtonClick() {
+	if (selectedWeapons.size === 0) {
+		alert('ブキがひとつも選択されていません！\nリストからブキを選んでください。');
+		return;
 	}
+
+	// Setを配列に変換
+	const targetWeapons = Array.from(selectedWeapons);
+	
+	// ランダムに一つ選ぶ
+	const selectedWeapon = getRandomItem(targetWeapons);
+
+	// カテゴリを逆引き（表示用）
+	let foundCategory = "カスタム選択";
+	for (const [cat, list] of Object.entries(WEAPON_DATA)) {
+		if (list.includes(selectedWeapon)) {
+			foundCategory = cat;
+			break;
+		}
+	}
+
+	displayResult(foundCategory, selectedWeapon);
 }
 
 // ==========================================
 // 実行開始
 // ==========================================
+function init() {
+	initAccordionUI();
 
-// DOM読み込み完了後に初期化を実行
+	const rollBtn = document.getElementById(DOM_ID.ROLL_BUTTON);
+	if (rollBtn) {
+		rollBtn.addEventListener('click', onRollButtonClick);
+	}
+}
+
 document.addEventListener('DOMContentLoaded', init);

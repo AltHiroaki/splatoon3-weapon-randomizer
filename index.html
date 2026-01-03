@@ -2,33 +2,71 @@
 <html lang="ja">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>スプラトゥーン3 ブキランダムメーカー</title>
-    <link rel="stylesheet" href="style.css">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>スプラトゥーン3 ブキランダムメーカー</title>
+	<link rel="stylesheet" href="style.css">
+	<style>
+		/* メニュー画面専用のスタイル */
+		.menu-btn {
+			display: block;
+			width: 100%;
+			max-width: 400px;
+			margin: 20px 0;
+			padding: 20px;
+			font-size: 1.5rem;
+			text-decoration: none;
+			color: #fff;
+			background-color: #333;
+			border-radius: 50px;
+			text-align: center;
+			font-weight: bold;
+			transition: transform 0.2s, background-color 0.2s;
+			box-shadow: 0 4px 0px #000;
+		}
+
+		.menu-btn:hover {
+			transform: translateY(-5px);
+			background-color: var(--primary-color);
+		}
+
+		.menu-btn:active {
+			transform: translateY(2px);
+			box-shadow: 0 1px 0px #000;
+		}
+
+		.desc {
+			font-size: 0.9rem;
+			color: #666;
+			margin-bottom: 5px;
+		}
+	</style>
 </head>
 
 <body>
 
-    <h1>スプラトゥーン3<br>ブキ選出メーカー</h1>
+	<h1>スプラトゥーン3<br>ブキ選出メーカー</h1>
 
-    <div id="result-area">
-        <div id="result-category">条件を選んでボタンを押してね</div>
-        <div id="result-weapon">???</div>
+	<div style="text-align: center; padding: 20px;">
+		<p>モードを選んでください</p>
 
-        <img id="weapon-image" src="" alt="ブキ画像">
-    </div>
+		<div class="desc">種別ごとにサクッとランダム！</div>
+		<a href="simple.html" class="menu-btn">かんたん選出モード</a>
 
-    <div id="radio-container">
-    </div>
+		<br>
 
-    <button id="roll-button">ブキを選出する！</button>
+		<div class="desc">自分で使うブキを細かく指定！</div>
+		<a href="custom.html" class="menu-btn">カスタム選出モード</a>
+	</div>
 
-    <footer>
-        &copy; Splatoon 3 Weapon Randomizer
-    </footer>
+	<footer>
+		<p>
+			当サイトはスプラトゥーン3のファンによる非公式Webサイトです。<br>
+			当サイトで使用している画像の著作権は、任天堂株式会社に帰属します。<br>
+			&copy; Splatoon 3 Weapon Randomizer
+		</p>
+	</footer>
 
-    <script src="script.js"></script>
 </body>
 
 </html>
