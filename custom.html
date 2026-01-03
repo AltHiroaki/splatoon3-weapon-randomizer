@@ -23,8 +23,23 @@
 		<img id="weapon-image" src="" alt="ブキ画像">
 	</div>
 
-	<button id="roll-button" style="margin-bottom: 30px;">選択したブキから選出！</button>
+	<button id="roll-button" style="margin-bottom: 20px;">選択したブキから選出！</button>
 
+	<div id="filter-area">
+		<div class="panel">
+			<h3>サブで絞り込み</h3>
+			<div id="sub-filter-container" class="filter-list">
+				</div>
+		</div>
+
+		<div class="panel">
+			<h3>対応スペシャル (自動)</h3>
+			<div id="special-display-container" class="filter-list">
+				</div>
+		</div>
+
+		<button class="reset-filter-btn" onclick="resetSubFilter()">絞り込みをリセット</button>
+	</div>
 	<div id="accordion-container"></div>
 
 	<footer>

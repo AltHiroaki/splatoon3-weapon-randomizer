@@ -263,3 +263,109 @@ footer {
 	font-size: 0.8rem;
 	color: #888;
 }
+
+/* --- サブ・スペシャル連動パネルのデザイン --- */
+#filter-area {
+	width: 100%;
+	max-width: 800px;
+	margin-bottom: 20px;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 15px;
+}
+
+@media (max-width: 600px) {
+	#filter-area {
+		grid-template-columns: 1fr;
+	}
+}
+
+.panel {
+	background-color: #fff;
+	padding: 15px;
+	border-radius: 10px;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.panel h3 {
+	margin-top: 0;
+	font-size: 1rem;
+	border-bottom: 2px solid var(--accent-color);
+	padding-bottom: 5px;
+	margin-bottom: 10px;
+	color: #333;
+}
+
+.filter-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.filter-btn {
+	background: #eee;
+	border: 1px solid #ddd;
+	padding: 6px 10px;
+	border-radius: 15px;
+	cursor: pointer;
+	font-size: 0.8rem;
+	transition: all 0.2s;
+	color: #555;
+}
+
+.filter-btn:hover {
+	background: #ddd;
+}
+
+/* サブ選択時のスタイル */
+.filter-btn.active {
+	background: var(--active-header-bg);
+	color: #fff;
+	border-color: var(--active-header-bg);
+	font-weight: bold;
+}
+
+/* スペシャルタグ（自動表示用） */
+.special-tag {
+	padding: 6px 10px;
+	border-radius: 4px;
+	font-size: 0.85rem;
+	background: #f9f9f9;
+	color: #888;
+	border: 1px solid #eee;
+
+	/* 変更点: クリック可能にする設定 */
+	pointer-events: auto;
+	cursor: pointer;
+
+	transition: all 0.2s;
+}
+
+.special-tag:hover {
+	background: #e0e0e0;
+}
+
+.special-tag.active {
+	background: #ff5050;
+	color: #fff;
+	border-color: #ff5050;
+	font-weight: bold;
+	box-shadow: 0 2px 5px rgba(255, 80, 80, 0.3);
+}
+
+.reset-filter-btn {
+	grid-column: 1 / -1;
+	background-color: #666;
+	color: white;
+	border: none;
+	padding: 8px 20px;
+	border-radius: 5px;
+	cursor: pointer;
+	margin-top: 10px;
+	font-size: 0.9rem;
+	justify-self: center;
+}
+
+.reset-filter-btn:hover {
+	background-color: #444;
+}
