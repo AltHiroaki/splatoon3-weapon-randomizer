@@ -10,6 +10,7 @@
 /**
  * ブキカテゴリーとブキ一覧のデータオブジェクト。
  * キーがカテゴリ名、値がブキ名の配列。
+ * @constant
  * @type {Object.<string, string[]>}
  */
 const WEAPON_DATA = {
@@ -73,6 +74,7 @@ const WEAPON_DATA = {
 
 /**
  * DOM要素のID定数
+ * @constant
  * @type {Object.<string, string>}
  */
 const DOM_ID = {
@@ -83,10 +85,15 @@ const DOM_ID = {
 };
 
 /**
- * 「すべて」を選択したときの特別な識別キー
+ * 全選択時のモード定義
+ * ALL_FLAT: ブキ数に比例して抽選（シューターが出やすい）
+ * ALL_CATEGORY: まずカテゴリを選んでから抽選（ブキ種ごとの確率は平等）
+ * @constant
  * @type {string}
  */
-const ALL_KEY = 'ALL';
+const MODE_ALL_FLAT = 'ALL_FLAT';
+const MODE_ALL_CATEGORY = 'ALL_CATEGORY';
+
 
 // ==========================================
 // 関数定義
@@ -153,11 +160,41 @@ function pickWeaponByCategory(categoryKey) {
 }
 
 /**
- * 全てのカテゴリからランダムにブキを選出する。
+ * 全ブキをフラットに並べてからランダム選出する。
+ * ブキ数が多いカテゴリ（シューター等）が選ばれやすくなる。
  */
-function pickWeaponFromAll() {
+function pickWeaponFromAllFlat() {
+	// 1. 全てのブキを1つの配列にまとめる
+	let allWeapons = [];
+	const categories = Object.keys(WEAPON_DATA);
+
+	categories.forEach(cat => {
+		allWeapons = allWeapons.concat(WEAPON_DATA[cat]);
+	});
+
+	// 2. その中からランダムに1つ選ぶ
+	const selectedWeapon = getRandomItem(allWeapons);
+
+	// 3. 表示用にカテゴリ名を逆引きする
+	let foundCategory = '';
+	for (const cat of categories) {
+		if (WEAPON_DATA[cat].includes(selectedWeapon)) {
+			foundCategory = cat;
+			break;
+		}
+	}
+
+	displayResult(foundCategory, selectedWeapon);
+}
+
+/**
+ * カテゴリをまず抽選し、その中からブキを選出する。
+ * ブキ数が少ないカテゴリも、多いカテゴリと同じ確率で選ばれる。
+ */
+function pickWeaponFromAllCategory() {
 	const categories = Object.keys(WEAPON_DATA);
 	const randomCategory = getRandomItem(categories);
+	// 選ばれたカテゴリ内で再抽選
 	pickWeaponByCategory(randomCategory);
 }
 
@@ -168,24 +205,33 @@ function initRadioUI() {
 	const container = document.getElementById(DOM_ID.RADIO_CONTAINER);
 	if (!container) return;
 
-	const categories = [ALL_KEY, ...Object.keys(WEAPON_DATA)];
-	categories.forEach((category, index) => {
+	// 生成するボタンの定義リスト
+	const options = [
+		{ value: MODE_ALL_FLAT, label: '全ブキから (ブキ数に比例)', checked: true },
+		{ value: MODE_ALL_CATEGORY, label: '全種から (種別は平等)', checked: false }
+	];
+
+	// 通常のカテゴリを追加
+	Object.keys(WEAPON_DATA).forEach(cat => {
+		options.push({ value: cat, label: cat, checked: false });
+	});
+
+	// ボタン生成ループ
+	options.forEach((opt, index) => {
 		const radioId = `radio-${index}`;
-		const labelText = category === ALL_KEY ? 'すべての種から' : category;
 
 		const input = document.createElement('input');
 		input.type = 'radio';
 		input.name = 'weapon-category';
-		input.value = category;
+		input.value = opt.value;
 		input.id = radioId;
 		input.className = 'radio-input';
-		// デフォルトで「すべて」を選択
-		if (category === ALL_KEY) input.checked = true;
+		if (opt.checked) input.checked = true;
 
 		const label = document.createElement('label');
 		label.htmlFor = radioId;
 		label.className = 'radio-label';
-		label.textContent = labelText;
+		label.textContent = opt.label;
 
 		container.appendChild(input);
 		container.appendChild(label);
@@ -202,9 +248,15 @@ function onRollButtonClick() {
 		return;
 	}
 	const selectedValue = checkedRadio.value;
-	if (selectedValue === ALL_KEY) {
-		pickWeaponFromAll();
+
+	if (selectedValue === MODE_ALL_FLAT) {
+		// 全ブキ数比例モード
+		pickWeaponFromAllFlat();
+	} else if (selectedValue === MODE_ALL_CATEGORY) {
+		// カテゴリ平等モード
+		pickWeaponFromAllCategory();
 	} else {
+		// 通常のカテゴリ選択
 		pickWeaponByCategory(selectedValue);
 	}
 }

@@ -166,7 +166,14 @@ h1 {
 	background-color: #fffeec;
 }
 
-.radio-input[value="ALL"]:checked+.radio-label {
+.radio-input[value="ALL_FLAT"]+.radio-label,
+.radio-input[value="ALL_CATEGORY"]+.radio-label {
+	border-color: var(--accent-color);
+	background-color: #fffeec;
+}
+
+.radio-input[value="ALL_FLAT"]:checked+.radio-label,
+.radio-input[value="ALL_CATEGORY"]:checked+.radio-label {
 	background-color: var(--accent-color);
 	color: #000;
 	border-color: var(--accent-color);
